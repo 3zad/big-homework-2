@@ -29,22 +29,6 @@ sorted (x::y::xs) = compare x y /= GT  && sorted (y::xs)
 data In : {0 T:Type} -> (x:T) -> (xs: List T) -> Type where
     InHere: {0 T:Type} -> {x:T} -> {xs: List T} -> In x (x::xs)
     InThere: {0 T:Type} -> {x:T} -> {y:T} -> {xs: List T} -> In x xs -> In x (y::xs)
- 
-total
-sortedProp : (xs: List Nat) -> sorted (sort xs) = True
-sortedProp xs = ?sortedProp_rhs
-
-total
-in_sorted: Ord a => (x:a) -> (xs:List a) -> In x xs -> In x (sort xs)
-in_sorted x xs p = ?in_sorted_rhs
-
-total
-lemma1 : (y : Nat) -> (x : Nat) -> not (compareNat x y == GT)  = True -> (xs : List Nat) -> sorted (x :: xs) = True -> (ys : List Nat) -> sorted (y :: ys) = True -> sorted (x :: merge xs (y :: ys)) = True
-lemma1 y x p xs q ys r  = ?lemma1_rhs
- 
-total
-lemma2 :(y : Nat) -> (x : Nat) -> not (compareNat x y == LT) = True -> (xs : List Nat) -> sorted (x :: xs) = True -> (ys : List Nat) -> sorted (y :: ys) = True -> sorted (y :: merge (x :: xs) ys) = True
-lemma2 y x p xs q ys w = ?lemma2_rhs
 
 total
 splitListIn_rhs_6 : Ord a => (s : List a) -> (w : a) -> (zs : List a) -> (Either (In x v) (In x s) -> In x zs) -> In x (z :: v) -> In x (z :: (w :: zs))
