@@ -26,14 +26,14 @@ sorted [] = True
 sorted [_] = True
 sorted (x::y::xs) = compare x y /= GT  && sorted (y::xs)
  
-total
-sortedProp : (xs: List Nat) -> sorted (sort xs) = True
-sortedProp xs = ?sortedProp_rhs
- 
 data In : {0 T:Type} -> (x:T) -> (xs: List T) -> Type where
     InHere: {0 T:Type} -> {x:T} -> {xs: List T} -> In x (x::xs)
     InThere: {0 T:Type} -> {x:T} -> {y:T} -> {xs: List T} -> In x xs -> In x (y::xs)
  
+total
+sortedProp : (xs: List Nat) -> sorted (sort xs) = True
+sortedProp xs = ?sortedProp_rhs
+
 total
 in_sorted: Ord a => (x:a) -> (xs:List a) -> In x xs -> In x (sort xs)
 in_sorted x xs p = ?in_sorted_rhs
@@ -79,8 +79,7 @@ merge_in_rhs_7 x y xs ys z p (Left w) = Left w
 merge_in_rhs_7 x y xs ys z p (Right w) = Right (InThere w)
 
 total
-merge_in_rhs_8 : Ord a => (x:a) -> (y:a) -> (xs: List a) -> (ys: List a) -> (z : a) -> In x (merge xs (z :: 
-ys)) -> Either (In x xs) (In x (z :: ys)) -> Either (In x (y :: xs)) (In x (z :: ys))
+merge_in_rhs_8 : Ord a => (x:a) -> (y:a) -> (xs: List a) -> (ys: List a) -> (z : a) -> In x (merge xs (z :: ys)) -> Either (In x xs) (In x (z :: ys)) -> Either (In x (y :: xs)) (In x (z :: ys))
 merge_in_rhs_8 x y xs ys z p (Left w) = Left (InThere w)
 merge_in_rhs_8 x y xs ys z p (Right w) = Right w
 
