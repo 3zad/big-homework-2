@@ -34,26 +34,9 @@ data In : {0 T:Type} -> (x:T) -> (xs: List T) -> Type where
     InHere: {0 T:Type} -> {x:T} -> {xs: List T} -> In x (x::xs)
     InThere: {0 T:Type} -> {x:T} -> {y:T} -> {xs: List T} -> In x xs -> In x (y::xs)
  
-sorted_in_rhs_5 : Ord a => (z : a) -> (v : List a) -> In x (merge (sort (y :: w)) (sort (z :: v))) -> (zs : List a) -> (Either (In x w))
-sorted_in_rhs_5 z v o p w InHere t = InHere
-sorted_in_rhs_5 z v o p w (InThere s) t = InThere ( InThere (w (Left s)) )
-
-total
-sorted_in: Ord a => (x:a) -> (xs:List a) -> In x (sort xs) -> In x xs
-sorted_in x [] p = ?impossible
-sorted_in x (y :: []) p = p
-sorted_in x (y :: ( z :: zs )) p with (splitListIn x zs) | (splitList zs)
-    _ | q | (w, v) with (merge_in x _ _ p)
-        _ | (Left s) with (sorted_in x _ s)
-            _ | l = sorted_in_rhs_5 z v p zs q l s
-        _ | (Right s) with (sorted_in x _ s)
-            _ | l = sorted_in_rhs_6 y w p zs q l s
-
 total
 in_sorted: Ord a => (x:a) -> (xs:List a) -> In x xs -> In x (sort xs)
-in_sorted x [] p = ?impossible
-in_sorted x (y :: []) p = p
-in_sorted x (y :: ( z :: zs )) p = ?www
+in_sorted x xs p = ?in_sorted_rhs
 
 total
 lemma1 : (y : Nat) -> (x : Nat) -> not (compareNat x y == GT)  = True -> (xs : List Nat) -> sorted (x :: xs) = True -> (ys : List Nat) -> sorted (y :: ys) = True -> sorted (x :: merge xs (y :: ys)) = True
@@ -62,3 +45,17 @@ lemma1 y x p xs q ys r  = ?lemma1_rhs
 total
 lemma2 :(y : Nat) -> (x : Nat) -> not (compareNat x y == LT) = True -> (xs : List Nat) -> sorted (x :: xs) = True -> (ys : List Nat) -> sorted (y :: ys) = True -> sorted (y :: merge (x :: xs) ys) = True
 lemma2 y x p xs q ys w = ?lemma2_rhs
+
+splitListIn : Ord a => (x:a) -> (xs:List a) ->
+        Either (In x (fst (splitList xs))) (In x (snd (splitList xs))) -> In x xs
+splitListIn x [] (Left y) = y
+splitListIn x (z :: []) (Left y) = y
+splitListIn x (z:: ( w :: zs) ) (Left y) with (splitList x zs) | (splitList zs)
+    _ | q | (v, s) = splitListIn_rhs_6 
+splitListIn x xs (Right y) = ?splitListIn_right 
+
+sorted_in: Ord a => (x:a) -> (xs:List a) -> In x (sort xs) -> In x xs
+sorted_in x [] p = p
+sorted_in x (y :: []) p = p
+sorted_in x (y :: z :: zs) p with (splitList zs)
+    _ | (w, v) = 
