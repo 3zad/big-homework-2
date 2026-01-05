@@ -18,12 +18,12 @@ sort [] = []
 sort [x] = [x]
 sort (x::y::zs) =
     let (xs, ys) = splitList zs in
-    merge (assert_total (sort (x::xs))) (asserttotal (sort (y::ys)))
+    merge (assert_total (sort (x::xs))) (assert_total (sort (y::ys)))
  
 total
 sorted : Ord a => List a -> Bool
 sorted [] = True
-sorted [] = True
+sorted [_] = True
 sorted (x::y::xs) = compare x y /= GT  && sorted (y::xs)
  
 data In : {0 T:Type} -> (x:T) -> (xs: List T) -> Type where
