@@ -49,12 +49,8 @@ mergeSorted xs p [] q with (xs)
     _ | [] = p
     _ | (x :: xs') = p
 mergeSorted (x :: xs) p (y :: ys) q with (compare x y /= GT)
-    _ | True = 
-        let sortedTail = assert_total (mergeSorted xs (tailSorted xs x p ys y q) (y :: ys) q)
-        in ?mergeSorted_rhs1
-    _ | False = 
-        let sortedTail = assert_total (mergeSorted (x :: xs) p ys (tailSorted ys y q xs x p))
-        in ?mergeSorted_rhs2
+    _ | True = ?rhs -- lemma1 y x Refl xs (tailSorted (x :: xs) x p ys y q) ys q
+    _ | False = ?lhs -- lemma2 x y Refl ys (tailSorted ys y q xs x p) xs p
 
 total
 sortedProp : (xs: List Nat) -> sorted (sort xs) = True
@@ -106,26 +102,18 @@ splitListConsCons : (y : a) -> (z : a) -> (zs : List a) -> (v : List a) -> (s : 
 splitListConsCons y z zs v s prf = rewrite prf in Refl
 
 total
-fstSplitListCons : (y : a) -> (z : a) -> (zs : List a) -> (v : List a) -> (s : List a) -> splitList zs = (v, s) -> fst (splitList (y :: z :: zs)) = y :: v
-fstSplitListCons y z zs v s prf = cong fst (splitListConsCons y z zs v s prf)
-
-total
-sndSplitListCons : (y : a) -> (z : a) -> (zs : List a) -> (v : List a) -> (s : List a) -> splitList zs = (v, s) -> snd (splitList (y :: z :: zs)) = z :: s
-sndSplitListCons y z zs v s prf = cong snd (splitListConsCons y z zs v s prf)
-
-total
 in_sorted: Ord a => (x:a) -> (xs:List a) -> In x xs -> In x (sort xs)
 in_sorted x [] p = p
 in_sorted x [y] p = p
-in_sorted x (y :: z :: zs) p with (splitList zs)
-    _ | (v, s) with (splitList (y :: z :: zs))
-        _ | (yv, zs') = 
-            case inSplitList x (y :: z :: zs) p of
-                Left inLeft =>
-                    let inLeft' = believe_me inLeft in
-                    let inSorted = assert_total (in_sorted x (y :: v) inLeft')
-                    in in_merge x (sort (y :: v)) (sort (z :: s)) (Left inSorted)
-                Right inRight =>
-                    let inRight' = believe_me inRight in
-                    let inSorted = assert_total (in_sorted x (z :: s) inRight')
-                    in in_merge x (sort (y :: v)) (sort (z :: s)) (Right inSorted)
+in_sorted x (y :: z :: zs) p with (splitList zs) proof prf
+    _ | (v, s) =
+        let splitEq = splitListConsCons y z zs v s prf in
+        case inSplitList x (y :: z :: zs) p of
+            Left inLeft => 
+                let inLeft' = rewrite sym (cong fst splitEq) in inLeft in
+                let inSorted = assert_total (in_sorted x (y :: v) inLeft')
+                in in_merge x (sort (y :: v)) (sort (z :: s)) (Left inSorted)
+            Right inRight =>
+                let inRight' = rewrite sym (cong snd splitEq) in inRight in
+                let inSorted = assert_total (in_sorted x (z :: s) inRight')
+                in in_merge x (sort (y :: v)) (sort (z :: s)) (Right inSorted)
