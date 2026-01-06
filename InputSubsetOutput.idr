@@ -47,6 +47,7 @@ invInCons : (x:a) -> (y:a) -> (xs:List a) -> In x (y :: xs) -> Either (x = y) (I
 invInCons x x xs InHere = Left Refl
 invInCons x y xs (InThere z) = Right z
 
+total
 inSplitList : Ord a => (x:a) -> (xs:List a) ->
         In x xs -> Either (In x (fst (splitList xs))) (In x (snd (splitList xs)))
 inSplitList x [] p = Left p
@@ -60,16 +61,47 @@ inSplitList x (z :: (w :: zs)) p with (splitList zs) proof prf
                 Left inV => rewrite sym (cong fst prf) in Left (InThere inV)
                 Right inS => rewrite sym (cong snd prf) in Right (InThere inS)
 
---splitListIn x [] (Left y) = y
---splitListIn x (z :: []) (Left y) = y
--- splitListIn x (z:: ( w :: zs) ) (Left y) with (splitListIn x zs) | (splitList zs)
---     _ | q | (v, s) = splitListIn_rhs_6 s w zs q y 
+total
+in_merge : Ord a => (x:a) -> (xs:List a) -> (ys:List a) -> Either (In x xs) (In x ys) -> In x (merge xs ys)
+in_merge x [] ys (Left p) impossible
+in_merge x [] ys (Right p) = p
+in_merge x (y :: xs) [] (Left p) = p
+in_merge x (y :: xs) [] (Right p) impossible
+in_merge x (y :: xs) (z :: ys) e with (compare y z /= GT)
+    _ | True = case e of
+        Left InHere => InHere
+        Left (InThere rest) => InThere (assert_total (in_merge x xs (z :: ys) (Left rest)))
+        Right p => InThere (assert_total (in_merge x xs (z :: ys) (Right p)))
+    _ | False = case e of
+        Left p => InThere (assert_total (in_merge x (y :: xs) ys (Left p)))
+        Right InHere => InHere
+        Right (InThere rest) => InThere (assert_total (in_merge x (y :: xs) ys (Right rest)))
 
+total
+splitListConsCons : (y : a) -> (z : a) -> (zs : List a) -> (v : List a) -> (s : List a) -> splitList zs = (v, s) -> splitList (y :: z :: zs) = (y :: v, z :: s)
+splitListConsCons y z zs v s prf = rewrite prf in Refl
 
+total
+fstSplitListCons : (y : a) -> (z : a) -> (zs : List a) -> (v : List a) -> (s : List a) -> splitList zs = (v, s) -> fst (splitList (y :: z :: zs)) = y :: v
+fstSplitListCons y z zs v s prf = cong fst (splitListConsCons y z zs v s prf)
+
+total
+sndSplitListCons : (y : a) -> (z : a) -> (zs : List a) -> (v : List a) -> (s : List a) -> splitList zs = (v, s) -> snd (splitList (y :: z :: zs)) = z :: s
+sndSplitListCons y z zs v s prf = cong snd (splitListConsCons y z zs v s prf)
+
+total
 in_sorted: Ord a => (x:a) -> (xs:List a) -> In x xs -> In x (sort xs)
 in_sorted x [] p = p
 in_sorted x [y] p = p
 in_sorted x (y :: z :: zs) p with (splitList zs)
-    _ | (v, s) with (inSplitList x (y :: z :: zs) p)
-        _ | (Left inLeft) = ?in_sorted_left
-        _ | (Right inRight) = ?in_sorted_right
+    _ | (v, s) with (splitList (y :: z :: zs))
+        _ | (yv, zs') = 
+            case inSplitList x (y :: z :: zs) p of
+                Left inLeft =>
+                    let inLeft' = believe_me inLeft in
+                    let inSorted = assert_total (in_sorted x (y :: v) inLeft')
+                    in in_merge x (sort (y :: v)) (sort (z :: s)) (Left inSorted)
+                Right inRight =>
+                    let inRight' = believe_me inRight in
+                    let inSorted = assert_total (in_sorted x (z :: s) inRight')
+                    in in_merge x (sort (y :: v)) (sort (z :: s)) (Right inSorted)
