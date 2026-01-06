@@ -38,9 +38,33 @@ total
 lemma2 :(y : Nat) -> (x : Nat) -> not (compareNat x y == LT) = True -> (xs : List Nat) -> sorted (x :: xs) = True -> (ys : List Nat) -> sorted (y :: ys) = True -> sorted (y :: merge (x :: xs) ys) = True
 lemma2 y x p xs q ys w = ?lemma2_rhs
 
+tailSorted : (xs : List Nat) -> (x : Nat) -> sorted (x :: xs) = True -> (ys : List Nat) -> (y : Nat) -> sorted (y :: ys) = True -> sorted xs = True
+tailSorted [] x p ys y q = p
+tailSorted (z :: zs) x p ys y q = ?tailSorted_rhs
+
+total
+mergeSorted : (xs : List Nat) -> sorted xs = True -> (ys : List Nat) -> sorted ys = True -> sorted (merge xs ys) = True
+mergeSorted [] p ys q = q
+mergeSorted xs p [] q with (xs)
+    _ | [] = p
+    _ | (x :: xs') = p
+mergeSorted (x :: xs) p (y :: ys) q with (compare x y /= GT)
+    _ | True = 
+        let sortedTail = assert_total (mergeSorted xs (tailSorted xs x p ys y q) (y :: ys) q)
+        in ?mergeSorted_rhs1
+    _ | False = 
+        let sortedTail = assert_total (mergeSorted (x :: xs) p ys (tailSorted ys y q xs x p))
+        in ?mergeSorted_rhs2
+
 total
 sortedProp : (xs: List Nat) -> sorted (sort xs) = True
-sortedProp xs = ?sortedProp_rhs
+sortedProp [] = Refl
+sortedProp [x] = Refl
+sortedProp (x :: y :: zs) with (splitList zs) proof prf
+    _ | (v, s) = 
+        let sortedLeft = assert_total (sortedProp (x :: v))
+            sortedRight = assert_total (sortedProp (y :: s))
+        in mergeSorted (sort (x :: v)) sortedLeft (sort (y :: s)) sortedRight
 
 total
 invInCons : (x:a) -> (y:a) -> (xs:List a) -> In x (y :: xs) -> Either (x = y) (In x xs)
