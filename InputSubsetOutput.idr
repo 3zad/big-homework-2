@@ -38,9 +38,25 @@ total
 lemma2 :(y : Nat) -> (x : Nat) -> not (compareNat x y == LT) = True -> (xs : List Nat) -> sorted (x :: xs) = True -> (ys : List Nat) -> sorted (y :: ys) = True -> sorted (y :: merge (x :: xs) ys) = True
 lemma2 y x p xs q ys w = ?lemma2_rhs
 
-tailSorted : (xs : List Nat) -> (x : Nat) -> sorted (x :: xs) = True -> (ys : List Nat) -> (y : Nat) -> sorted (y :: ys) = True -> sorted xs = True
-tailSorted [] x p ys y q = p
-tailSorted (z :: zs) x p ys y q = ?tailSorted_rhs
+total
+mergeSorted_rhs_3 : (x : Nat) -> (y : Nat) -> compare x y /= GT = True -> not (compareNat x y == GT) = True
+mergeSorted_rhs_3 x y prf with (compare x y) proof cmp
+    _ | LT = Refl
+    _ | EQ = Refl  
+
+total  
+extractTailSorted : (x : Nat) -> (xs : List Nat) -> sorted (x :: xs) = True -> sorted xs = True
+extractTailSorted x [] prf = Refl
+extractTailSorted x (y :: ys) prf with (compare x y /= GT) proof p | (sorted (y :: ys)) proof q
+    _ | True | True = Refl
+    _ | True | False = absurd prf
+    _ | False | _ = absurd prf
+
+total
+mergeSorted_rhs_4 : (x : Nat) -> (y : Nat) -> compare x y /= GT = False -> not (compareNat x y == LT) = True
+mergeSorted_rhs_4 x y prf with (compare x y) proof cmp
+    _ | GT = Refl
+    
 
 total
 mergeSorted : (xs : List Nat) -> sorted xs = True -> (ys : List Nat) -> sorted ys = True -> sorted (merge xs ys) = True
@@ -48,9 +64,9 @@ mergeSorted [] p ys q = q
 mergeSorted xs p [] q with (xs)
     _ | [] = p
     _ | (x :: xs') = p
-mergeSorted (x :: xs) p (y :: ys) q with (compare x y /= GT)
-    _ | True = ?rhs -- lemma1 y x Refl xs (tailSorted (x :: xs) x p ys y q) ys q
-    _ | False = ?lhs -- lemma2 x y Refl ys (tailSorted ys y q xs x p) xs p
+mergeSorted (x :: xs) p (y :: ys) q with (compare x y /= GT) proof prf
+    _ | True = lemma1 y x (mergeSorted_rhs_3 x y prf) xs p ys q
+    _ | False = lemma2 y x (mergeSorted_rhs_4 x y prf) xs p ys q
 
 total
 sortedProp : (xs: List Nat) -> sorted (sort xs) = True
